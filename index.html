@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -27,12 +28,319 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>scan_bit_puzzle</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* ================= LOADER: PUZZLE ================= */
+    #loading-container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 45%, #1a1d29 0%, #0b0c10 72%);
+      z-index: 9999;
+    }
+
+    .loader-inner {
+      text-align: center;
+      user-select: none;
+    }
+
+    /* --- сцена с пазлом --- */
+    .puzzle-wrap {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 30px;
+      animation: puzzleGlow 3.4s ease-in-out infinite;
+    }
+
+    .piece {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      overflow: visible;
+      will-change: transform, opacity;
+    }
+
+    .piece-tl {
+      left: -10px;
+      top: -10px;
+      animation: assembleTL 3.4s ease-in-out infinite;
+    }
+
+    .piece-tr {
+      left: 90px;
+      top: -10px;
+      animation: assembleTR 3.4s ease-in-out infinite;
+    }
+
+    .piece-bl {
+      left: -10px;
+      top: 90px;
+      animation: assembleBL 3.4s ease-in-out infinite;
+    }
+
+    .piece-br {
+      left: 90px;
+      top: 90px;
+      animation: assembleBR 3.4s ease-in-out infinite;
+    }
+
+    /* Деталь влетает, «щёлкает» на место, ждёт остальных, потом рассыпается */
+    @keyframes assembleTL {
+      0% {
+        transform: translate(-80px, -80px) rotate(-55deg) scale(.7);
+        opacity: 0;
+      }
+
+      12% {
+        transform: translate(0, 0) rotate(0deg) scale(1.08);
+        opacity: 1;
+      }
+
+      15% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+
+      92% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-80px, -80px) rotate(-55deg) scale(.7);
+        opacity: 0;
+      }
+    }
+
+    @keyframes assembleTR {
+      0% {
+        transform: translate(80px, -80px) rotate(55deg) scale(.7);
+        opacity: 0;
+      }
+
+      18% {
+        transform: translate(0, 0) rotate(0deg) scale(1.08);
+        opacity: 1;
+      }
+
+      21% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+
+      92% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(80px, -80px) rotate(55deg) scale(.7);
+        opacity: 0;
+      }
+    }
+
+    @keyframes assembleBL {
+      0% {
+        transform: translate(-80px, 80px) rotate(55deg) scale(.7);
+        opacity: 0;
+      }
+
+      24% {
+        transform: translate(0, 0) rotate(0deg) scale(1.08);
+        opacity: 1;
+      }
+
+      27% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+
+      92% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-80px, 80px) rotate(55deg) scale(.7);
+        opacity: 0;
+      }
+    }
+
+    @keyframes assembleBR {
+      0% {
+        transform: translate(80px, 80px) rotate(-55deg) scale(.7);
+        opacity: 0;
+      }
+
+      30% {
+        transform: translate(0, 0) rotate(0deg) scale(1.08);
+        opacity: 1;
+      }
+
+      33% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+
+      92% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(80px, 80px) rotate(-55deg) scale(.7);
+        opacity: 0;
+      }
+    }
+
+    /* Мягкая вспышка вокруг собранного пазла */
+    @keyframes puzzleGlow {
+
+      0%,
+      74% {
+        filter: drop-shadow(0 10px 30px rgba(99, 102, 241, .18));
+      }
+
+      84% {
+        filter: drop-shadow(0 0 34px rgba(120, 140, 255, .75));
+      }
+
+      94%,
+      100% {
+        filter: drop-shadow(0 10px 30px rgba(99, 102, 241, .18));
+      }
+    }
+
+    /* --- подпись --- */
+    .loader-caption {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      color: #c9cde0;
+      margin: 0 0 18px;
+    }
+
+    .loader-caption .dot {
+      opacity: .25;
+      animation: dotBlink 1.5s infinite;
+    }
+
+    .loader-caption .dot:nth-child(2) {
+      animation-delay: .25s;
+    }
+
+    .loader-caption .dot:nth-child(3) {
+      animation-delay: .50s;
+    }
+
+    @keyframes dotBlink {
+
+      0%,
+      100% {
+        opacity: .2;
+      }
+
+      40% {
+        opacity: 1;
+      }
+    }
+
+    /* --- шиммер-прогресс --- */
+    .loader-bar {
+      width: 220px;
+      height: 3px;
+      margin: 0 auto;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, .07);
+      overflow: hidden;
+    }
+
+    .loader-bar::after {
+      content: '';
+      display: block;
+      width: 40%;
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #22d3ee, #6366f1, #ec4899);
+      animation: barSlide 1.7s cubic-bezier(.65, 0, .35, 1) infinite;
+    }
+
+    @keyframes barSlide {
+      0% {
+        transform: translateX(-100%);
+      }
+
+      100% {
+        transform: translateX(250%);
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <div id="loading-container">
+    <div class="loader-inner">
+
+      <div class="puzzle-wrap">
+        <!-- Верхний-левый: шип справа и снизу -->
+        <svg class="piece piece-tl" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="pj-tl" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#22d3ee" />
+              <stop offset="100%" stop-color="#3b82f6" />
+            </linearGradient>
+          </defs>
+          <path fill="url(#pj-tl)" d="M10,10 L110,10 L110,45 C130,45 130,75 110,75 L110,110 L75,110
+             C75,130 45,130 45,110 L10,110 Z" />
+        </svg>
+
+        <!-- Верхний-правый: паз слева, шип снизу -->
+        <svg class="piece piece-tr" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="pj-tr" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#3b82f6" />
+              <stop offset="100%" stop-color="#6366f1" />
+            </linearGradient>
+          </defs>
+          <path fill="url(#pj-tr)" d="M10,10 L110,10 L110,110 L75,110 C75,130 45,130 45,110 L10,110
+             L10,75 C30,75 30,45 10,45 Z" />
+        </svg>
+
+        <!-- Нижний-левый: паз сверху, шип справа -->
+        <svg class="piece piece-bl" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="pj-bl" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#6366f1" />
+              <stop offset="100%" stop-color="#a855f7" />
+            </linearGradient>
+          </defs>
+          <path fill="url(#pj-bl)" d="M10,10 L45,10 C45,30 75,30 75,10 L110,10 L110,45
+             C130,45 130,75 110,75 L110,110 L10,110 Z" />
+        </svg>
+
+        <!-- Нижний-правый: паз слева и сверху -->
+        <svg class="piece piece-br" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="pj-br" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#a855f7" />
+              <stop offset="100%" stop-color="#ec4899" />
+            </linearGradient>
+          </defs>
+          <path fill="url(#pj-br)" d="M10,10 L45,10 C45,30 75,30 75,10 L110,10 L110,110 L10,110
+             L10,75 C30,75 30,45 10,45 Z" />
+        </svg>
+      </div>
+
+      <div class="loader-caption">
+        СОБИРАЕМ ПАЗЛ<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+      </div>
+      <div class="loader-bar"></div>
+
+    </div>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -42,5 +350,17 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      const loader = document.getElementById('loading-container');
+      if (!loader) return;
+      loader.style.transition = 'opacity .35s ease';
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 350);
+    }
+      , 1000,
+    );
+  </script>
 </body>
+
 </html>
